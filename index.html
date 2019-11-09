@@ -28,6 +28,7 @@
         var beatCount = 0;
         var speed = 1;
         var barHeight = 0.9
+        var columnWidth = 30;
         
         // (((Number of pixels the notes has to move) / one frame per second) * number of milliseconds in one frame) / speed
         var timeLeftValue = Math.round((((canvas.height * barHeight) / 60) * 1000) / speed) ;
@@ -36,7 +37,6 @@
         var hitMs;
         var prevUpdate = Date.now();
         var noteSrc = 0;
-        var width = 50;
         var centerX = canvas.width/2;
         var noteArray = [];
         var timeSinceLastNote = 0;
@@ -70,7 +70,7 @@
         }
         
         function addNote() {
-            noteArray.push(new Note(0, speed, width, 1));
+            noteArray.push(new Note(0, speed, columnWidth, 1));
         }
         
         function removeNote() {
@@ -145,11 +145,20 @@
                 hitMs = (noteArray[0].timeCreated - nPress) + timeLeftValue;
             
                 if (hitMs > 100 || hitMs < -100) {
-                    test.innerHTML = "Bad " + hitMs + "ms";
+                    test.innerHTML = "Bad "
+                    test.style.color = "red";
                     removeNote();
                 } else {
-                    test.innerHTML = "Good " + hitMs + "ms";
+                    test.innerHTML = "Good ";
+                    test.style.color = "green";
                     removeNote();
+                }
+                if (hitMs > 0) {
+                    test.innerHTML += hitMs + "ms Early";
+                } else if (hitMs < 0) {
+                    test.innerHTML += -hitMs + "ms Late";
+                } else {
+                    test.innerHTML += hitMs + "ms";
                 }
             }
         }
