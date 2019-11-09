@@ -11,7 +11,7 @@
         <div id="gameplayWrapper">
             <canvas id="gameplay"></canvas>
             <br>
-            <span id="test">Nothing</span>
+            <span id="test"></span>
             <br><br>
             <span>Use the keys ZSXDCFV to hit the notes<br>Hit within 100 ms of notes overlapping the red bar to get a Good</span>
         </div>
@@ -30,8 +30,8 @@
         var barHeight = 0.9
         var columnWidth = 30;
         var numOfColumns = 7;
-        var msAllowedAfterBar = 500;
-        var timeUntilNextNote = 1000;
+        var msAllowedAfterBar = 300;
+        var timeUntilNextChord = 700;
         
         // (((Number of pixels the notes has to move) / one frame per second) * number of milliseconds in one frame) / speed
         var timeLeftValue = Math.round((((canvas.height * barHeight) / 60) * 1000) / speed) ;
@@ -40,25 +40,25 @@
         var timePressed;
         var hitMs;
         var prevUpdate = Date.now();
-        var noteSrc = 0;
+        var chordSrc = 0;
         var centerX = canvas.width/2;
 
         //First dimension is the column number
         //Second dimension is the order of creation
-        var noteArray = [[[]]];
+        var noteArray = [[]];
         for (var i = 0; i < numOfColumns; i++) {
             noteArray[i] = [];
         }
-        var timeSinceLastNote = 0;
+        var timeSinceLastChord = 0;
         var totalColumnWidth = columnWidth * numOfColumns;
         var leftoverWidth = canvas.width - totalColumnWidth;
         
         function updateScreen() {
             requestAnimationFrame(updateScreen);
             context.clearRect(0, 0, canvas.width, canvas.height);
-            if (timeSinceLastNote > timeUntilNextNote) {
-                addNote();
-                timeSinceLastNote = 0;
+            if (timeSinceLastChord > timeUntilNextChord) {
+                addChord();
+                timeSinceLastChord = 0;
             }
             
             context.fillStyle = "#FF0000";
@@ -78,27 +78,28 @@
             //console.log(noteArray.length);
             //console.log(canvas.width + " " + canvas.height);
             
-            timeSinceLastNote += Date.now() - prevUpdate;
+            timeSinceLastChord += Date.now() - prevUpdate;
             
             prevUpdate = Date.now();
         }
         
         function addChord() {
             var uniqueCols = [];
-            var numOfColInChord = Math.floor(Math.random()) * numOfColumns;
-            console.log(numOfColInChord);
+            var numOfColInChord = Math.floor(Math.random() * numOfColumns) + 1;
             
             while (uniqueCols.length < numOfColInChord) {
-                var num = (Math.floor(Math.random()) * numOfColInChord) + 1;
+                var num = (Math.floor(Math.random() * numOfColumns));
                 if (uniqueCols.indexOf(num) == -1) {
                     uniqueCols.push(num);
                 }
             }
             
+            for (var i = 0; i < uniqueCols.length; i++) {
+                addNote(uniqueCols[i]);
+            }
         }
         
-        function addNote() {
-            var col = Math.floor(Math.random() * 7);
+        function addNote(col) {
             noteArray[col].push(new Note(0, speed, columnWidth, col, (col * columnWidth) + (leftoverWidth / 2)));
         }
         
@@ -129,15 +130,18 @@
             }
             
             this.update = function() {
-
-                if (((noteArray[this.column][0].timeCreated - (new Date()).getTime()) + timeLeftValue) <= -msAllowedAfterBar) {
-                    removeNote(this.column);
-                }
                 
-                this.y += this.dy;
-                    
-                this.currentDuration -= 1;
-                this.draw();
+                var dUpdate = new Date();
+                var tUpdate = dUpdate.getTime();
+                
+                var x = ((noteArray[this.column][0].timeCreated - tUpdate) + timeLeftValue);
+                if ( x <= -(msAllowedAfterBar)) {
+                    removeNote(this.column);
+                } else {
+                
+                    this.y += this.dy;
+                    this.draw();
+                }
             }
         }
         
