@@ -29,9 +29,13 @@
         var speed = 1;
         var barHeight = 0.9
         var columnWidth = 30;
+        var numOfColumns = 7;
+        var msAllowedAfterBar = 500;
+        var timeUntilNextNote = 1000;
         
         // (((Number of pixels the notes has to move) / one frame per second) * number of milliseconds in one frame) / speed
         var timeLeftValue = Math.round((((canvas.height * barHeight) / 60) * 1000) / speed) ;
+        
         var dPress;
         var nPress;
         var hitMs;
@@ -40,9 +44,8 @@
         var centerX = canvas.width/2;
         var noteArray = [];
         var timeSinceLastNote = 0;
-        var timeUntilNextNote = 1000;
-        
-        var msAllowedAfterBar = 500;
+        var totalColumnWidth = columnWidth * numOfColumns;
+        var leftoverWidth = canvas.width - totalColumnWidth;
         
         function updateScreen() {
             requestAnimationFrame(updateScreen);
@@ -53,7 +56,7 @@
             }
             
             context.fillStyle = "#FF0000";
-            context.fillRect(0, canvas.height * barHeight, canvas.width, 10);
+            context.fillRect(leftoverWidth / 2, canvas.height * barHeight, totalColumnWidth, 10);
             
             //console.log(timeSinceLastNote);
             
@@ -145,11 +148,11 @@
                 hitMs = (noteArray[0].timeCreated - nPress) + timeLeftValue;
             
                 if (hitMs > 100 || hitMs < -100) {
-                    test.innerHTML = "Bad "
+                    test.innerHTML = "Bad<br>"
                     test.style.color = "red";
                     removeNote();
                 } else {
-                    test.innerHTML = "Good ";
+                    test.innerHTML = "Good<br>";
                     test.style.color = "green";
                     removeNote();
                 }
