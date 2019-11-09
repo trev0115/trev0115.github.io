@@ -2,8 +2,11 @@
 <html>
     <head>
         <style>
-            #gameplayWrapper {
+            #gameplayWrapper, #settingsWrapper {
                 text-align: center;
+            }
+            input {
+                width: 70px;
             }
         </style>
     </head>
@@ -14,6 +17,13 @@
             <span id="test"></span>
             <br><br>
             <span>Use the keys ZSXDCFV to hit the notes<br>Hit within 100 ms of notes overlapping the red bar to get a Good</span>
+        </div>
+        <div id="settingsWrapper">
+            <label for="tbxSpeed">Note Speed:</label>
+            <input type="text" id="tbxSpeed" value=2><br>
+            <label for="tbxFrequency">Note Frequency (in ms):</label>
+            <input type="text" id="tbxFrequency" value=1000><br>
+            <input type="button" id="btnUpdateOptions" value="Update" onclick="updateOptions()">
         </div>
     </body>
     <script>
@@ -26,15 +36,18 @@
         var test = document.getElementById("test");
         
         //User options
+        var tbxSpeed = document.getElementById("tbxSpeed");
+        var tbxFrequency = document.getElementById("tbxFrequency");
+        
         var speed = 1;
+        var timeUntilNextChord = 1000;
         var barHeight = 0.9
         var columnWidth = 30;
         var numOfColumns = 7;
-        var msAllowedAfterBar = 300;
-        var timeUntilNextChord = 700;
+        var msAllowedAfterBar = 500;
         
         // (((Number of pixels the notes has to move) / one frame per second) * number of milliseconds in one frame) / speed
-        var timeLeftValue = Math.round((((canvas.height * barHeight) / 60) * 1000) / speed) ;
+        var timeLeftValue = Math.round((((canvas.height * barHeight) / 60) * 1000) / speed);
         
         var datePressed;
         var timePressed;
@@ -53,6 +66,11 @@
         var totalColumnWidth = columnWidth * numOfColumns;
         var leftoverWidth = canvas.width - totalColumnWidth;
         
+        function updateOptions() {
+            speed = parseInt(tbxSpeed.value);
+            timeUntilNextChord = tbxFrequency.value;
+        }
+        
         function updateScreen() {
             requestAnimationFrame(updateScreen);
             context.clearRect(0, 0, canvas.width, canvas.height);
@@ -60,26 +78,14 @@
                 addChord();
                 timeSinceLastChord = 0;
             }
-            
             context.fillStyle = "#FF0000";
             context.fillRect(leftoverWidth / 2, canvas.height * barHeight, totalColumnWidth, 10);
-            
-            //console.log(timeSinceLastNote);
-            //console.log(noteArray);
             for (var i = 0; i < numOfColumns; i++) {
-                //console.log(noteArray[i]);
                 for (var j = noteArray[i].length - 1 ; j >= 0; j--){
-                    //console.log(noteArray[i][j]);
-                    
                     noteArray[i][j].update();
                 }
             }
-            
-            //console.log(noteArray.length);
-            //console.log(canvas.width + " " + canvas.height);
-            
             timeSinceLastChord += Date.now() - prevUpdate;
-            
             prevUpdate = Date.now();
         }
         
@@ -114,7 +120,6 @@
             this.dy = dy;
             this.width = width;
             this.timeCreated = (new Date()).getTime();
-            this.timeLeft = timeLeftValue;
             this.column = column;
             this.colX = colX;
             
@@ -130,15 +135,10 @@
             }
             
             this.update = function() {
-                
-                var dUpdate = new Date();
-                var tUpdate = dUpdate.getTime();
-                
-                var x = ((noteArray[this.column][0].timeCreated - tUpdate) + timeLeftValue);
+                var x = ((noteArray[this.column][0].timeCreated - (new Date()).getTime()) + timeLeftValue);
                 if ( x <= -(msAllowedAfterBar)) {
                     removeNote(this.column);
                 } else {
-                
                     this.y += this.dy;
                     this.draw();
                 }
@@ -148,6 +148,17 @@
         /*canvas.addEventListener('touchstart', pressHandle, false);*/
         
         document.addEventListener('keydown', pressHandle, false);
+        
+        window.addEventListener("gamepadconnected", function(e) {
+            console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+            e.gamepad.index, e.gamepad.id,
+            e.gamepad.buttons.length, e.gamepad.axes.length);
+        });
+        
+        window.addEventListener("gamepaddisconnected", function(e) {
+            console.log("Gamepad disconnected from index %d: %s",
+            e.gamepad.index, e.gamepad.id);
+        });
         
         function pressHandle(e) {
             // Keydown
