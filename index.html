@@ -69,6 +69,7 @@
         function updateOptions() {
             speed = parseInt(tbxSpeed.value);
             timeUntilNextChord = tbxFrequency.value;
+            timeLeftValue = Math.round((((canvas.height * barHeight) / 60) * 1000) / speed);
         }
         
         function updateScreen() {
@@ -149,16 +150,20 @@
         
         document.addEventListener('keydown', pressHandle, false);
         
-        window.addEventListener("gamepadconnected", function(e) {
+        /*window.addEventListener("gamepadconnected", function(e) {
             console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
             e.gamepad.index, e.gamepad.id,
             e.gamepad.buttons.length, e.gamepad.axes.length);
+            console.log(e.gamepad.buttons);
+            
+            var gamepads = navigator.getGamepads();
+            console.log(gamepads);
         });
         
         window.addEventListener("gamepaddisconnected", function(e) {
             console.log("Gamepad disconnected from index %d: %s",
             e.gamepad.index, e.gamepad.id);
-        });
+        });*/
         
         function pressHandle(e) {
             // Keydown
