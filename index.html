@@ -13,7 +13,7 @@
             <br>
             <span id="test">Nothing</span>
             <br><br>
-            <span>Hit any key within 100 ms of notes overlapping the red bar to get a Good</span>
+            <span>Hit any key or touch the gameplay screen within 100 ms of notes overlapping the red bar to get a Good</span>
         </div>
     </body>
     <script>
@@ -114,7 +114,12 @@
             context.fillStyle = "red";     context.fillRect(0, 0, canvas.width, canvas.height);
         }*/
         
-        document.body.onkeydown = function(e) { // Keydown
+        canvas.addEventListener('touchstart', pressHandle, false);
+        
+        document.addEventListener('keydown', pressHandle, false);
+        
+        function pressHandle() {
+            // Keydown
             dPress = new Date();
             nPress = dPress.getTime();
         //    console.log("nPress = " + nPress + ", exact = " + noteArray[0].exact + ". offset = " + (nPress - noteArray[0].exact));
