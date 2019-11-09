@@ -73,7 +73,8 @@
         }
         
         function addNote() {
-            noteArray.push(new Note(0, speed, columnWidth, 1));
+            var col = Math.floor(Math.random() * 7);
+            noteArray.push(new Note(0, speed, columnWidth, col, (col * columnWidth) + (leftoverWidth / 2)));
         }
         
         function removeNote() {
@@ -82,18 +83,19 @@
         
         updateScreen();
         
-        function Note(y, dy, width, column) { // Red Note
+        function Note(y, dy, width, column, colX) { // Red Note
             this.y = y;
             this.dy = dy;
             this.width = width;
             this.timeCreated = (new Date()).getTime();
             this.timeLeft = timeLeftValue;
             this.column = column;
+            this.colX = colX;
             //this.exact = exact;
 
             this.draw = function() {
                 context.fillStyle = "black";
-                context.fillRect(centerX - (width / 2), this.y, width,  10); // Note
+                context.fillRect(/*centerX - (width / 2)*/this.colX, this.y, width,  10); // Note
             }
             
             this.update = function() {
