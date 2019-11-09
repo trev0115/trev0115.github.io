@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html>
     <head>
-        
+        <style>
+            #gameplayWrapper {
+                text-align: center;
+            }
+        </style>
     </head>
     <body>
-        <canvas id="gameplay"></canvas>
-        <span id="test">Nothing</span>
+        <div id="gameplayWrapper">
+            <canvas id="gameplay"></canvas>
+            <br>
+            <span id="test">Nothing</span>
+        </div>
     </body>
     <script>
         var canvas = document.getElementById("gameplay");
@@ -44,7 +51,7 @@
             }
             
             context.fillStyle = "#FF0000";
-            context.fillRect(0, canvas.height * barHeight, 1000, 10);
+            context.fillRect(0, canvas.height * barHeight, canvas.width, 10);
             
             //console.log(timeSinceLastNote);
             
@@ -81,7 +88,7 @@
 
             this.draw = function() {
                 context.fillStyle = "black";
-                context.fillRect(centerX - 10, this.y, width,  10); // Note
+                context.fillRect(centerX - (width / 2), this.y, width,  10); // Note
             }
             
             this.update = function() {
@@ -113,7 +120,7 @@
                 pressValue = duration - noteArray[0].exact;
             }*/
             //console.log((noteArray[0].timeCreated - nPress) + timeLeftValue);
-            if (e.keyCode == 68) { // D keydown
+            /*if (e.keyCode == 68) { // D keydown
                 judgeNote("1");
             } else if (e.keyCode == 70) { // F keydown
                 judgeNote("1");
@@ -121,7 +128,9 @@
                 judgeNote("1");
             } else if (e.keyCode == 75) { // K keydown
                 judgeNote("1");
-            }
+            }*/
+            
+            judgeNote("1");
         }
         
         function judgeNote(column) {
