@@ -45,7 +45,7 @@
 
         //First dimension is the column number
         //Second dimension is the order of creation
-        var noteArray = [[]];
+        var noteArray = [[[]]];
         for (var i = 0; i < numOfColumns; i++) {
             noteArray[i] = [];
         }
@@ -81,6 +81,20 @@
             timeSinceLastNote += Date.now() - prevUpdate;
             
             prevUpdate = Date.now();
+        }
+        
+        function addChord() {
+            var uniqueCols = [];
+            var numOfColInChord = Math.floor(Math.random()) * numOfColumns;
+            console.log(numOfColInChord);
+            
+            while (uniqueCols.length < numOfColInChord) {
+                var num = (Math.floor(Math.random()) * numOfColInChord) + 1;
+                if (uniqueCols.indexOf(num) == -1) {
+                    uniqueCols.push(num);
+                }
+            }
+            
         }
         
         function addNote() {
