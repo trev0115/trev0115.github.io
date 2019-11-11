@@ -30,7 +30,7 @@
             <label for="tbxMaxNPC">Maximum Notes Per Chord (&gt;= Min NPM, &lt; No. of Columns):</label>
             <input type="text" id="tbxMaxNPC" value=7><br>
             <label for="tbxColumnsUsed">Columns Used:</label>
-            <input type="text" id="tbxColumnsUsed" value="1234567"><br>
+            <input type="text" id="tbxColumnsUsed" value="0,1,2,3,4,5,6"><br>
             <input type="button" id="btnUpdateOptions" value="Update" onclick="updateOptions()">
         </div>
     </body>
@@ -56,7 +56,7 @@
         var barHeight = 0.9
         var columnWidth = 30;
         var numOfColumns = 7;
-        var columnsUsed = "1234567"
+        var columnsUsed = [0, 1, 2, 3, 4, 5, 6];
         //NPC stand for the number of Notes Per Chord
         var minNPC = 1;
         var maxNPC = 7;
@@ -83,15 +83,28 @@
         var leftoverWidth = canvas.width - totalColumnWidth;
         
         function updateOptions() {
-            speed = parseInt(tbxSpeed.value);
-            timeUntilNextChord = parseInt(tbxFrequency.value);
-            minNPC = parseInt(tbxMinNPC.value);
-            maxNPC = parseInt(tbxMaxNPC.value);
-            numOfColumns = parseInt(tbxNumOfColumns.value);
+            if (parseInt(tbxSpeed.value) > 0) {
+                speed = parseInt(tbxSpeed.value);
+            }
+            if (parseInt(tbxFrequency.value) > 0 ) {
+                timeUntilNextChord = parseInt(tbxFrequency.value);
+            }
+            if (parseInt(tbxNumOfColumns.value) > 0) {
+                numOfColumns = parseInt(tbxNumOfColumns.value);
+            }
+            if (parseInt(tbxMinNPC.value) > 0 && parseInt(tbxMinNPC.value) > numOfColumns) {
+                minNPC = parseInt(tbxMinNPC.value);
+            }
+            if (parseInt(tbxMaxNPC.value) <= numOfColumns && parseInt(tbxMaxNPC.value) >= minNPC) {
+                maxNPC = parseInt(tbxMaxNPC.value);
+            }
+            
             columnsUsed = tbxColumnsUsed.value;
+            
             timeLeftValue = Math.round((((canvas.height * barHeight) / 60) * 1000) / speed);
             totalColumnWidth = columnWidth * numOfColumns;
             leftoverWidth = canvas.width - totalColumnWidth;
+            columnsUsed = tbxColumnsUsed.value.split(",");
             
             for (var i = 0; i < numOfColumns; i++) {
                 noteArray[i] = [];
@@ -122,13 +135,13 @@
         function addChord() {
             var uniqueCols = [];
             var numOfColInChord = Math.floor(Math.random() * (maxNPC - minNPC + 1)) + minNPC;
-            console.log(numOfColInChord);
             
             while (uniqueCols.length < numOfColInChord) {
                 
-                var num = (Math.floor(Math.random() * numOfColumns));
-                if (uniqueCols.indexOf(num) == -1) {
-                    uniqueCols.push(num);
+                //var num = (Math.floor(Math.random() * numOfColumns));
+                var num = (Math.floor(Math.random() * columnsUsed.length));
+                if (uniqueCols.indexOf(columnsUsed[num]) == -1) {
+                    uniqueCols.push(columnsUsed[num]);
                 }
             }
             
@@ -138,6 +151,7 @@
         }
         
         function addNote(col) {
+            console.log(col);
             noteArray[col].push(new Note(0, speed, columnWidth, col, (col * columnWidth) + (leftoverWidth / 2)));
         }
         
