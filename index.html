@@ -86,6 +86,8 @@
         var leftoverWidth = canvas.width - totalColumnWidth;
         
         function updateOptions() {
+            var tempColUsed = tbxColumnsUsed.value.split(",").length;
+            
             if (parseInt(tbxSpeed.value) > 0) {
                 speed = parseInt(tbxSpeed.value);
             }
@@ -98,11 +100,10 @@
             if (parseInt(tbxMinNPC.value) > 0 && parseInt(tbxMinNPC.value) > numOfColumns) {
                 minNPC = parseInt(tbxMinNPC.value);
             }
-            if (parseInt(tbxMaxNPC.value) <= numOfColumns && parseInt(tbxMaxNPC.value) >= minNPC) {
+            if (parseInt(tbxMaxNPC.value) <= numOfColumns && parseInt(tbxMaxNPC.value) >= minNPC && parseInt(tbxMaxNPC.value) <= tempColUsed) {
                 maxNPC = parseInt(tbxMaxNPC.value);
             }
             
-            var tempColUsed = tbxColumnsUsed.value.split(",").length;
             if (tempColUsed >= maxNPC && tempColUsed <= numOfColumns && tempColUsed >= minNPC ) {
                 columnsUsed = tbxColumnsUsed.value.split(",");
                 for (i = 0; i < columnsUsed.length; i++) {
