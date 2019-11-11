@@ -30,7 +30,7 @@
             <label for="tbxMaxNPC">Maximum Notes Per Chord (&gt;= Min NPM, &lt; No. of Columns):</label>
             <input type="text" id="tbxMaxNPC" value=7><br>
             <label for="tbxColumnsUsed">Columns Used:</label>
-            <input type="text" id="tbxColumnsUsed" value="0,1,2,3,4,5,6"><br>
+            <input type="text" id="tbxColumnsUsed" value="1,2,3,4,5,6,7"><br>
             <input type="button" id="btnUpdateOptions" value="Update" onclick="updateOptions()">
         </div>
     </body>
@@ -56,7 +56,7 @@
         var barHeight = 0.9
         var columnWidth = 30;
         var numOfColumns = 7;
-        var columnsUsed = [0, 1, 2, 3, 4, 5, 6];
+        var columnsUsed = [1, 2, 3, 4, 5, 6, 7];
         //NPC stand for the number of Notes Per Chord
         var minNPC = 1;
         var maxNPC = 7;
@@ -105,6 +105,9 @@
             totalColumnWidth = columnWidth * numOfColumns;
             leftoverWidth = canvas.width - totalColumnWidth;
             columnsUsed = tbxColumnsUsed.value.split(",");
+            for (i = 0; i < columnsUsed.length; i++) {
+                columnsUsed[i] += 1;
+            }
             
             for (var i = 0; i < numOfColumns; i++) {
                 noteArray[i] = [];
