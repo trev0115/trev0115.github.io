@@ -30,7 +30,7 @@
             <label for="tbxMaxNPC">Maximum Notes Per Chord (&gt;= Min NPM, &lt; No. of Columns):</label>
             <input type="text" id="tbxMaxNPC" value=7><br>
             <label for="tbxColumnsUsed">Columns Used:</label>
-            <input type="text" id="tbxColumnsUsed" value="0,1,2,3,4,5,6"><br>
+            <input type="text" id="tbxColumnsUsed" value="1,2,3,4,5,6,7"><br>
             <input type="button" id="btnUpdateOptions" value="Update" onclick="updateOptions()">
         </div>
     </body>
@@ -56,7 +56,10 @@
         var barHeight = 0.9
         var columnWidth = 30;
         var numOfColumns = 7;
-        var columnsUsed = [0, 1, 2, 3, 4, 5, 6];
+        var columnsUsed = [1, 2, 3, 4, 5, 6, 7];
+        for (i = 0; i < columnsUsed.length; i++) {
+                columnsUsed[i] -= 1;
+        }
         //NPC stand for the number of Notes Per Chord
         var minNPC = 1;
         var maxNPC = 7;
@@ -99,12 +102,20 @@
                 maxNPC = parseInt(tbxMaxNPC.value);
             }
             
-            columnsUsed = tbxColumnsUsed.value;
+            var tempColUsed = tbxColumnsUsed.value.split(",").length;
+            if (tempColUsed >= maxNPC && tempColUsed <= numOfColumns && tempColUsed >= minNPC ) {
+                columnsUsed = tbxColumnsUsed.value.split(",");
+                for (i = 0; i < columnsUsed.length; i++) {
+                    columnsUsed[i] = parseInt(columnsUsed[i]) - 1;
+                }
+            }
+            
+            console.log(tempColUsed + " " + maxNPC + " " + numOfColumns + " " + minNPC + " " + columnsUsed);
             
             timeLeftValue = Math.round((((canvas.height * barHeight) / 60) * 1000) / speed);
             totalColumnWidth = columnWidth * numOfColumns;
             leftoverWidth = canvas.width - totalColumnWidth;
-            columnsUsed = tbxColumnsUsed.value.split(",");
+            
             
             for (var i = 0; i < numOfColumns; i++) {
                 noteArray[i] = [];
@@ -151,7 +162,6 @@
         }
         
         function addNote(col) {
-            console.log(col);
             noteArray[col].push(new Note(0, speed, columnWidth, col, (col * columnWidth) + (leftoverWidth / 2)));
         }
         
