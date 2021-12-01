@@ -51,21 +51,22 @@
         var tbxColumnsUsed = document.getElementById("tbxColumnsUsed");
         var tbxNumOfColumns = document.getElementById("tbxNumOfColumns");
         
-        var speed = 1;
-        var timeUntilNextChord = 1000;
+        var speed = 1;//ms moved per frame
+        var timeUntilNextChord = 1000;//ms before next chord
         var barHeight = 0.9
-        var columnWidth = 30;
+        var columnWidth = 30;//width of columns and notes in px
         var numOfColumns = 7;
         var columnsUsed = [1, 2, 3, 4, 5, 6, 7];
         for (i = 0; i < columnsUsed.length; i++) {
                 columnsUsed[i] -= 1;
-        }
+        }//Assigns the columns used from 0 to 6?
         //NPC stand for the number of Notes Per Chord
         var minNPC = 1;
         var maxNPC = 7;
         var msAllowedAfterBar = 500;
         
-        // (((Number of pixels the notes has to move) / one frame per second) * number of milliseconds in one frame) / speed
+        // Calculates how much time until the note will hit the target bar
+        // (((Number of pixels the notes has to move) / 60 frames) * number of milliseconds in one frame) / speed
         var timeLeftValue = Math.round((((canvas.height * barHeight) / 60) * 1000) / speed);
         
         var datePressed;
@@ -80,29 +81,31 @@
         var noteArray = [[]];
         for (var i = 0; i < numOfColumns; i++) {
             noteArray[i] = [];
-        }
-        var timeSinceLastChord = 0;
-        var totalColumnWidth = columnWidth * numOfColumns;
-        var leftoverWidth = canvas.width - totalColumnWidth;
+        }//Resets all columns to empty, no notes
+        var timeSinceLastChord = 0; //Timer in ms for when next note spawns
+        var totalColumnWidth = columnWidth * numOfColumns; //Playfield width
+        var leftoverWidth = canvas.width - totalColumnWidth; //Left over width before and after playfield
         
         function updateOptions() {
-            var tempColUsed = tbxColumnsUsed.value.split(",").length;
+            var tempColUsed = tbxColumnsUsed.value.split(",").length;//Number of columns used
             
             if (parseInt(tbxSpeed.value) > 0) {
                 speed = parseInt(tbxSpeed.value);
-            }
+            }//Sets speed if greater than 0
             if (parseInt(tbxFrequency.value) > 0 ) {
                 timeUntilNextChord = parseInt(tbxFrequency.value);
-            }
+            }//Sets frequency if greater than 0
             if (parseInt(tbxNumOfColumns.value) > 0) {
                 numOfColumns = parseInt(tbxNumOfColumns.value);
-            }
-            if (parseInt(tbxMinNPC.value) > 0 && parseInt(tbxMinNPC.value) > numOfColumns) {
+            }//Sets columns if greater than 0
+            //Do I need both numOfColumns and tempColUsed? What's the difference?
+            if (parseInt(tbxMinNPC.value) > 0 && parseInt(tbxMinNPC.value) < numOfColumns) {
                 minNPC = parseInt(tbxMinNPC.value);
-            }
+            }//sets minNPC if greater than 0 and greater than numOfColumns??? Should be less than?
+            //Example: 0 < 3 > 7 doesn't make sense
             if (parseInt(tbxMaxNPC.value) <= numOfColumns && parseInt(tbxMaxNPC.value) >= minNPC && parseInt(tbxMaxNPC.value) <= tempColUsed) {
                 maxNPC = parseInt(tbxMaxNPC.value);
-            }
+            }//sets maxNPC if less than or equal to num of columns AND greater than or equal to minNPC AND less than or equal to tempColUsed???
             
             if (tempColUsed >= maxNPC && tempColUsed <= numOfColumns && tempColUsed >= minNPC ) {
                 columnsUsed = tbxColumnsUsed.value.split(",");
@@ -124,31 +127,32 @@
         }
         
         function updateScreen() {
-            // Runs once a frame
+            // Runs once a frame ideally, when frame is requested
             requestAnimationFrame(updateScreen);
-            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.clearRect(0, 0, canvas.width, canvas.height);//Clears the canvas
             if (timeSinceLastChord > timeUntilNextChord) {
                 addChord();
                 timeSinceLastChord = 0;
-            }
+            }//adds a chord if its been however many ms since the last chord was added
             
             //Red bar is filled before the notes so it is underneath
             context.fillStyle = "#FF0000";
             context.fillRect(leftoverWidth / 2, canvas.height * barHeight, totalColumnWidth, 10);
-            for (var i = 0; i < numOfColumns; i++) {
-                for (var j = noteArray[i].length - 1 ; j >= 0; j--){
-                    noteArray[i][j].update();
+            
+            for (var i = 0; i < numOfColumns; i++) {//runs for each column
+                for (var j = noteArray[i].length - 1 ; j >= 0; j--){//runs for each note in each column
+                    noteArray[i][j].update();//updayes each note???
                 }
             }
-            timeSinceLastChord += Date.now() - prevUpdate;
-            prevUpdate = Date.now();
+            timeSinceLastChord += Date.now() - prevUpdate;//adds time between previous function completion and this function completed, to the time since the last chord was drawn
+            prevUpdate = Date.now();//records time that this function completed
         }
         
         function addChord() {
-            var uniqueCols = [];
-            var numOfColInChord = Math.floor(Math.random() * (maxNPC - minNPC + 1)) + minNPC;
+            var uniqueCols = [];//Array of columns that currently have a note...? maybe not the best way to do this but it works. Basically brute forcing creation of a random chord by using math.random a bunch
+            var numOfColInChord = Math.floor(Math.random() * (maxNPC - minNPC + 1)) + minNPC;//calculates how many columns will be used in this chord. so between minNPC and maxNPC
             
-            while (uniqueCols.length < numOfColInChord) {
+            while (uniqueCols.length < numOfColInChord) {//loop that generates the chord. runs until uniqueCols is equal to numOfColsInChord
                 
                 //var num = (Math.floor(Math.random() * numOfColumns));
                 var num = (Math.floor(Math.random() * columnsUsed.length));
@@ -159,20 +163,20 @@
             
             for (var i = 0; i < uniqueCols.length; i++) {
                 addNote(uniqueCols[i]);
-            }
+            }//adds notes for each of the columns used in this chord, based on what was randomly selected
         }
         
         function addNote(col) {
             noteArray[col].push(new Note(0, speed, columnWidth, col, (col * columnWidth) + (leftoverWidth / 2)));
-        }
+        }//adds a note object 
         
         function removeNote(col) {
             noteArray[col].shift(0);
-        }
+        }//removes a note object
         
-        updateScreen();
+        updateScreen();//starts the updateScreen loop?
         
-        function Note(y, dy, width, column, colX) { // Red Note
+        function Note(y, dy, width, column, colX) { // Note object
             this.y = y;
             this.dy = dy;
             this.width = width;
@@ -184,18 +188,19 @@
                 this.fillColor = "blue";
             } else {
                 this.fillColor = "gray";
-            }
+            }//colors the note depending on column number
 
             this.draw = function() {
                 context.fillStyle = this.fillColor;
-                context.fillRect(/*centerX - (width / 2)*/this.colX, this.y, width,  10); // Note
+                context.fillRect(/*centerX - (width / 2)*/this.colX, this.y, width,  10); // Draws the note based on the color, column, and height and width of the note object
             }
             
             this.update = function() {
                 var x = ((noteArray[this.column][0].timeCreated - (new Date()).getTime()) + timeLeftValue);
+                //Updates the amount of time left in ms before the note hits the target bar
                 if ( x <= -(msAllowedAfterBar)) {
-                    removeNote(this.column);
-                } else {
+                    removeNote(this.column);//removes note after msAllowedAfterBar if that much time has passed
+                } else {//updates the y position of the note and draws it
                     this.y += this.dy;
                     this.draw();
                 }
