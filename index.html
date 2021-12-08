@@ -14,9 +14,9 @@ dkk
 kdd </textarea><br>
             <span style="all:unset">
                 <label for="tbxScrollSpeed">Scroll Speed (pixels/sec):</label>
-                <input type="text" id="tbxScrollSpeed" value="3"><br>
+                <input type="text" id="tbxScrollSpeed" value="4"><br>
                 <label for="tbxNoteSpeed">Note Spawn Speed (in ms)</label>
-                <input type="text" id="tbxNoteSpeed" value=200><br>
+                <input type="text" id="tbxNoteSpeed" value=250><br>
             </span>
             <input type="button" id="btnUpdate" value="Update" onclick="updateOptions()"><br>
             <span>Use the keys DF JK</span>
@@ -215,10 +215,10 @@ kdd </textarea><br>
                 hitMs = (noteArray[0].timeCreated - nPress) + timeLeftValue;
             
                 if ((hitMs > 100 || hitMs < -100) || color != noteArray[0].color) {
-                    test.innerHTML = "Bad " + hitMs + "ms";
+                    //test.innerHTML = "Bad " + hitMs + "ms";
                     removeNote();
                 } else {
-                    test.innerHTML = "Good " + hitMs + "ms";
+                    //test.innerHTML = "Good " + hitMs + "ms";
                     removeNote();
                 }
             }
