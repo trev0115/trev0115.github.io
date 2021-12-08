@@ -76,6 +76,7 @@ kdd </textarea><br>
             console.log(speed);
             timeUntilNextNote = document.getElementById("tbxNoteSpeed").value;
             console.log(timeUntilNextNote);
+            timeLeftValue = Math.round((((canvas.width * (1 - targetX)) / 60) * 1000) / speed);
         }
         
         function updateScreen() {
@@ -215,10 +216,10 @@ kdd </textarea><br>
                 hitMs = (noteArray[0].timeCreated - nPress) + timeLeftValue;
             
                 if ((hitMs > 100 || hitMs < -100) || color != noteArray[0].color) {
-                    //test.innerHTML = "Bad " + hitMs + "ms";
+                    test.innerHTML = "Bad " + hitMs + "ms";
                     removeNote();
                 } else {
-                    //test.innerHTML = "Good " + hitMs + "ms";
+                    test.innerHTML = "Good " + hitMs + "ms";
                     removeNote();
                 }
             }
