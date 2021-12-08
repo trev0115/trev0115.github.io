@@ -1,43 +1,32 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <style>
-            #gameplayWrapper, #settingsWrapper {
-                text-align: center;
-            }
-            input {
-                width: 70px;
-            }
-        </style>
+        
     </head>
     <body>
-        <div id="gameplayWrapper">
-            <canvas id="gameplay"></canvas>
-            <br>
-            <span id="test"></span>
-            <br><br>
-            <span>Use the keys ZSXDCFV to hit the notes</span>
-        </div>
-        <div id="settingsWrapper">
-            <label for="tbxSpeed">Note Speed:</label>
-            <input type="text" id="tbxSpeed" value=2><br>
-            <label for="tbxFrequency">Note Frequency (in ms):</label>
-            <input type="text" id="tbxFrequency" value=1000><br>
-            <label for="tbxNumOfColumns">Number of Columns (&gt; Max and Min NPM):</label>
-            <span id="randomSettings" style="all:unset">
-                <input type="text" id="tbxNumOfColumns" value="7"><br>
-                <label for="tbxMinNPC">Minimum Notes Per Chord (&gt;= 0, 	&lt; Max NPM):</label>
-                <input type="text" id="tbxMinNPC" value=1><br>
-                <label for="tbxMaxNPC">Maximum Notes Per Chord (&gt;= Min NPM, &lt; No. of Columns):</label>
-                <input type="text" id="tbxMaxNPC" value=7><br>
-                <label for="tbxColumnsUsed">Columns Used:</label>
-                <input type="text" id="tbxColumnsUsed" value="1,2,3,4,5,6,7"><br>
+        <canvas id="gameplay"></canvas><br>
+        <span id="test"></span><br>
+        <div style="width: 100%; height: 5%">
+            <textarea id="taPatterning" style="width: 50vw; height: 20vh;"
+>ddk 
+kkd 
+dkk 
+kdd </textarea><br>
+            <span style="all:unset">
+                <label for="tbxScrollSpeed">Scroll Speed (pixels/sec):</label>
+                <input type="text" id="tbxScrollSpeed" value="3"><br>
+                <label for="tbxNoteSpeed">Note Spawn Speed (in ms)</label>
+                <input type="text" id="tbxNoteSpeed" value=200><br>
             </span>
-            <input type="text" id="tbxPatterning" value="13,24,35,46,57,46,35,24" style="width:100%;"><br>
-            <input type="button" id="btnUpdateOptions" value="Update" onclick="updateOptions()">
+            <input type="button" id="btnUpdate" value="Update" onclick="updateOptions()"><br>
+            <span>Use the keys DF JK</span>
         </div>
+        
     </body>
     <script>
+        var tbxPatterning = document.getElementById("taPatterning");
+        tbxPatterning.style.height = window.innerHeight * .2;
+        //var patterningLoop = [[]];
         var canvas = document.getElementById("gameplay");
         canvas.width = window.innerWidth * .9;
         canvas.height = window.innerHeight * .6;
@@ -46,300 +35,191 @@
         context = canvas.getContext('2d');
         var test = document.getElementById("test");
         
-        //User options
-        var tbxSpeed = document.getElementById("tbxSpeed");
-        var tbxFrequency = document.getElementById("tbxFrequency");
-
-        //Random Settings
-        var spanRandomSettings = document.getElementById("randomSettings");
-        spanRandomSettings.style.display = "none";
-        var tbxMinNPC = document.getElementById("tbxMinNPC");
-        var tbxMaxNPC = document.getElementById("tbxMaxNPC");
-        var tbxColumnsUsed = document.getElementById("tbxColumnsUsed");
-        var tbxNumOfColumns = document.getElementById("tbxNumOfColumns");
-        var tbxPatterning = document.getElementById("tbxPatterning");
+        //var beatCount = 0; Not used
+        var speed = 3;
+        var targetX = 0.2
+        var radius = canvas.height / 13;
         
-        var speed = 1;//ms moved per frame
-        var timeUntilNextChord = 1000;//ms before next chord
-        var barHeight = .9
-        var columnWidth = 60;//width of columns and notes in px
-        var numOfColumns = 7;
-        var columnsUsed = [1, 2, 3, 4, 5, 6, 7];
-        var patterning1 = [];
-        var patterning2 = [[1, 3], [2, 4], [3, 5], [4, 6], [5, 7], [4, 6], [3, 5], [2, 4]];
-        var patterningCount = 0;
-        for (i = 0; i < columnsUsed.length; i++) {
-                columnsUsed[i] -= 1;
-        }//Assigns the columns used from 0 to 6?
-        //NPC stand for the number of Notes Per Chord
-        var minNPC = 1;
-        var maxNPC = 7;
-        var msAllowedAfterBar = 500;
-        
-        // Calculates how much time until the note will hit the target bar
-        // (((Number of pixels the notes has to move) / 60 frames) * number of milliseconds in one frame) / speed
-        var timeLeftValue = Math.round((((canvas.height * barHeight) / 60) * 1000) / speed);
-        
-        var datePressed;
-        var timePressed;
+        // (((Number of pixels the notes has to move) / one frame per second) * number of milliseconds in one frame) / speed = how many milliseconds left
+        var timeLeftValue = Math.round((((canvas.width * (1 - targetX)) / 60) * 1000) / speed);
+        var dPress;
+        var nPress;
         var hitMs;
         var prevUpdate = Date.now();
-        var chordSrc = 0;
-        var centerX = canvas.width/2;
-
-        //First dimension is the column number
-        //Second dimension is the order of creation (last note added will be judged and deleted first)
-        var noteArray = [[]];
-        for (var i = 0; i < numOfColumns; i++) {
-            noteArray[i] = [];
-        }//Resets all columns to empty, no notes
-        var timeSinceLastChord = 0; //Timer in ms for when next note spawns
-        var totalColumnWidth = columnWidth * numOfColumns; //Playfield width
-        var leftoverWidth = canvas.width - totalColumnWidth; //Left over width before and after playfield
+        var noteSrc = 0;
+        var width = 50;
+        var centerY = canvas.height/2;
+        var noteArray = [];
+        var timeSinceLastNote = 0;
+        var timeUntilNextNote = 200;
+        var noteColor = "red";
+        
+        var msAllowedAfterTarget = 150;
+        
+        var redNote = new Image;
+        redNote.src = 'redNote.png';
+        var blueNote = new Image;
+        blueNote.src = 'blueNote.png';
+        
+        var patterningGroups = ["ddk ", "kkd ", "dkk ", "kdd "];
+        var currentPatternGroup = 0;
+        var currentPatternGroupNote = 0;
         
         function updateOptions() {
-            var tempColUsed = tbxColumnsUsed.value.split(",").length;//Number of columns used
+            patterningGroups = [];
+            patterningGroups = tbxPatterning.value.split(/\n/);
+            //console.log(patterningGroups);
+            currentPatternGroup = 0;
+            currentPatternGroupNote = 0;
             
-            if (parseInt(tbxSpeed.value) > 0) {
-                speed = parseInt(tbxSpeed.value);
-            }//Sets speed if greater than 0
-            if (parseInt(tbxFrequency.value) > 0 ) {
-                timeUntilNextChord = parseInt(tbxFrequency.value);
-            }//Sets frequency if greater than 0
-            if (parseInt(tbxNumOfColumns.value) > 0) {
-                numOfColumns = parseInt(tbxNumOfColumns.value);
-            }//Sets columns if greater than 0
-            //Do I need both numOfColumns and tempColUsed? What's the difference?
-            if (parseInt(tbxMinNPC.value) > 0 && parseInt(tbxMinNPC.value) < numOfColumns) {
-                minNPC = parseInt(tbxMinNPC.value);
-            }//sets minNPC if greater than 0 and greater than numOfColumns??? Should be less than?
-            //Example: 0 < 3 > 7 doesn't make sense
-            if (parseInt(tbxMaxNPC.value) <= numOfColumns && parseInt(tbxMaxNPC.value) >= minNPC && parseInt(tbxMaxNPC.value) <= tempColUsed) {
-                maxNPC = parseInt(tbxMaxNPC.value);
-            }//sets maxNPC if less than or equal to num of columns AND greater than or equal to minNPC AND less than or equal to tempColUsed???
-            
-            if (tempColUsed >= maxNPC && tempColUsed <= numOfColumns && tempColUsed >= minNPC ) {
-                columnsUsed = tbxColumnsUsed.value.split(",");
-                for (i = 0; i < columnsUsed.length; i++) {
-                    columnsUsed[i] = parseInt(columnsUsed[i]) - 1;
-                }
-            }
-            
-            for (i = 0; i < patterning2.length; i++) {
-                patterning2[i].length = 0;
-            }
-            patterning2.length = 0;
-            patterning1 = tbxPatterning.value.split(",");
-            //console.log(patterning1);
-            for (i = 0; i < patterning1.length; i++) {
-                patterning2[i] = [];
-                for (var j = 0; j < patterning1[i].length; j++) {
-                    patterning2[i][j] = patterning1[i].substring(j, j + 1);
-                }
-            }
-            patterningCount = 0;
-            
-            //console.log(patterning2);
-
-            //console.log(tempColUsed + " " + maxNPC + " " + numOfColumns + " " + minNPC + " " + columnsUsed);
-            
-            timeLeftValue = Math.round((((canvas.height * barHeight) / 60) * 1000) / speed);
-            totalColumnWidth = columnWidth * numOfColumns;
-            leftoverWidth = canvas.width - totalColumnWidth;
-            
-            
-            for (var i = 0; i < numOfColumns; i++) {
-                noteArray[i] = [];
-            }
+            speed = document.getElementById("tbxScrollSpeed").value;
+            console.log(speed);
+            timeUntilNextNote = document.getElementById("tbxNoteSpeed").value;
+            console.log(timeUntilNextNote);
         }
         
         function updateScreen() {
-            // Runs once a frame ideally, when frame is requested
             requestAnimationFrame(updateScreen);
-            context.clearRect(0, 0, canvas.width, canvas.height);//Clears the canvas
-            if (timeSinceLastChord > timeUntilNextChord) {
-                addChord();
-                timeSinceLastChord = 0;
-            }//adds a chord if its been however many ms since the last chord was added
-            
-            //Red bar is filled before the notes so it is underneath
-            context.fillStyle = "#FF0000";
-            context.fillRect(leftoverWidth / 2, canvas.height * barHeight, totalColumnWidth, 10);
-            
-            for (var i = 0; i < numOfColumns; i++) {//runs for each column
-                for (var j = noteArray[i].length - 1 ; j >= 0; j--){//runs for each note in each column
-                    noteArray[i][j].update();//updates each note???
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            if (timeSinceLastNote > timeUntilNextNote) {
+                var i = patterningGroups;
+                var j = currentPatternGroup;
+                var k = currentPatternGroupNote;
+                
+                //console.log(i.length + " " + j + " " + k);
+
+                if (patterningGroups[currentPatternGroup].substring(currentPatternGroupNote, currentPatternGroupNote + 1) == "d") {
+                    //console.log(patterningGroups[currentPatternGroup].substring(currentPatternGroupNote, currentPatternGroupNote + 1));
+                    addNote("red");
+                } if (patterningGroups[currentPatternGroup].substring(currentPatternGroupNote, currentPatternGroupNote + 1) == "k") {
+                    //console.log(patterningGroups[currentPatternGroup].substring(currentPatternGroupNote, currentPatternGroupNote + 1));
+                    addNote("blue");
                 }
+                
+                //console.log( currentPatternGroupNote + " " + currentPatternGroup.toString.length)
+                if (currentPatternGroupNote >= patterningGroups[currentPatternGroup].length - 1) {
+                    //console.log(patterningGroups[currentPatternGroup].length);
+                    currentPatternGroupNote = 0;
+                    currentPatternGroup = Math.floor(Math.random() * patterningGroups.length);
+                    //console.log(patterningGroups);
+                    /*if (currentPatternGroup >= patterningGroups.length - 1) {
+                        currentPatternGroup = 0;
+                    } else {
+                        console.log(currentPatternGroup + " " + (patterningGroups.length - 1));
+                        currentPatternGroup++;
+                    }*/ // Looping patterning
+                } else {
+                    currentPatternGroupNote++; 
+                }
+                
+                timeSinceLastNote = 0;
+                
+                
+            } 
+            
+            context.fillStyle = "#FF0000";
+            context.beginPath();
+            context.arc(canvas.width * targetX, canvas.height/2, radius, 10, 0, 2 * Math.PI);
+            context.stroke();
+            //console.log(canvas.width * targetX);
+            //console.log(canvas.height/2);
+            
+            //console.log(timeSinceLastNote);
+            
+            for (var i = noteArray.length - 1; i >= 0; i--) {
+                noteArray[i].update();
             }
-            timeSinceLastChord += Date.now() - prevUpdate;//adds time between previous function completion and this function completed, to the time since the last chord was drawn
-            prevUpdate = Date.now();//records time that this function completed
+            
+            //console.log(noteArray.length);
+            //console.log(canvas.width + " " + canvas.height);
+            
+            timeSinceLastNote += Date.now() - prevUpdate;
+            
+            prevUpdate = Date.now();
         }
         
-        function addChord() {
-            var uniqueCols = [];//Array of columns that currently have a note...? maybe not the best way to do this but it works. Basically brute forcing creation of a random chord by using math.random a bunch
-            var numOfColInChord = Math.floor(Math.random() * (maxNPC - minNPC + 1)) + minNPC;//calculates how many columns will be used in this chord. so between minNPC and maxNPC
-            
-            var debug = false;
-            
-            if (debug == true) {
-                while (uniqueCols.length < numOfColInChord) {//loop that generates the chord. runs until uniqueCols is equal to numOfColsInChord
-
-                    //var num = (Math.floor(Math.random() * numOfColumns));
-                    var num = (Math.floor(Math.random() * columnsUsed.length));
-                    if (uniqueCols.indexOf(columnsUsed[num]) == -1) {
-                        uniqueCols.push(columnsUsed[num]);
-                    }
-                }
-
-                for (var i = 0; i < uniqueCols.length; i++) {
-                    addNote(uniqueCols[i]);
-                }//adds notes for each of the columns used in this chord, based on what was randomly selected
-            } else {
-                
-
-                //for (var i = 0; i < patterning2.length; i++) {
-                    //console.log(patterningCount);
-                    //console.log(patterning2);
-                    for (var j = patterning2[patterningCount].length - 1; j >= 0; j--) {
-                        
-                        
-                        addNote(patterning2[patterningCount][j] - 1);
-                        
-                    }    
-                //}
-                
-                if (patterningCount == patterning2.length - 1) {
-                    patterningCount = 0;
-                } else {
-                    patterningCount++;
-                }
-            }
-        }       
+        function addNote(color) {
+            noteArray.push(new Note(canvas.width, speed, radius, color));
+        }
         
-        function addNote(col) {
-            noteArray[col].push(new Note(0, speed, columnWidth, col, (col * columnWidth) + (leftoverWidth / 2)));
-           //console.log(col);
-        }//adds a note object 
+        function removeNote() {
+            noteArray.shift(0);
+        }
         
-        function removeNote(col) {
-            noteArray[col].shift(0);
-        }//removes a note object
+        updateScreen();
         
-        updateScreen();//starts the updateScreen loop?
-        
-        function Note(y, dy, width, column, colX) { // Note object
-            this.y = y;
-            this.dy = dy;
+        function Note(x, dx, radius, color) { // Red Note
+            this.x = x;
+            this.dx = dx;
             this.width = width;
             this.timeCreated = (new Date()).getTime();
-            this.column = column;
-            this.colX = colX;
-            
-            if (this.column % 2 == 1) {
-                this.fillColor = "blue";
-            } else {
-                this.fillColor = "gray";
-            }//colors the note depending on column number
+            this.timeLeft = timeLeftValue;
+            this.color = color;
+            //this.exact = exact;
 
             this.draw = function() {
-                context.fillStyle = this.fillColor;
-                context.fillRect(/*centerX - (width / 2)*/this.colX, this.y, width,  20); // Draws the note based on the color, column, and height and width of the note object
+                if (this.color == "blue") {
+                    noteSrc = blueNote;
+                } else if (this.color == "red") {
+                    noteSrc = redNote;
+                }
+                
+                context.fillStyle = this.color;
+                context.beginPath();
+                context.drawImage(noteSrc, this.x - radius, centerY - radius, radius * 2, radius * 2); // drawing note
+                //context.fillRect(centerY - 10, this.y, width,  10); // Old mania style note
             }
             
             this.update = function() {
-                var x = ((noteArray[this.column][0].timeCreated - (new Date()).getTime()) + timeLeftValue);
-                //Updates the amount of time left in ms before the note hits the target bar
-                if ( x <= -(msAllowedAfterBar)) {
-                    removeNote(this.column);//removes note after msAllowedAfterBar if that much time has passed
-                } else {//updates the y position of the note and draws it
-                    this.y += this.dy;
-                    this.draw();
+
+                if (((noteArray[0].timeCreated - (new Date()).getTime()) + timeLeftValue) <= -msAllowedAfterTarget) {
+                    removeNote();
                 }
+                
+                this.x -= this.dx;
+                    
+                this.currentDuration -= 1;
+                this.draw();
             }
         }
         
-        /*canvas.addEventListener('touchstart', pressHandle, false);*/
+        /*document.body.onkeydown = function(e) {
+            context.fillStyle = "blue";     context.fillRect(0, 0, canvas.width, canvas.height);
+        }
         
-        document.addEventListener('keydown', pressHandle, false);
+        document.body.onkeyup = function(e) {
+            context.fillStyle = "red";     context.fillRect(0, 0, canvas.width, canvas.height);
+        }*/
         
-        /*window.addEventListener("gamepadconnected", function(e) {
-            console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
-            e.gamepad.index, e.gamepad.id,
-            e.gamepad.buttons.length, e.gamepad.axes.length);
-            console.log(e.gamepad.buttons);
-            
-            var gamepads = navigator.getGamepads();
-            console.log(gamepads);
-        });
-        
-        window.addEventListener("gamepaddisconnected", function(e) {
-            console.log("Gamepad disconnected from index %d: %s",
-            e.gamepad.index, e.gamepad.id);
-        });*/
-        
-        function pressHandle(e) {
-            // Keydown
-            datePressed = new Date();
-            timePressed = datePressed.getTime();
-            //console.log((noteArray[0].timeCreated - timePressed) + timeLeftValue);
-            if (e.keyCode == 90) { // Z keydown
-                judgeNote("0");
-            } else if (e.keyCode == 83) { // S keydown
-                judgeNote("1");
-            } else if (e.keyCode == 88) { // X keydown
-                judgeNote("2");
-            } else if (e.keyCode == 68) { // D keydown
-                judgeNote("3");
-            } else if (e.keyCode == 67) { // C keydown
-                judgeNote("4");
+        document.body.onkeydown = function(e) { // Keydown
+            dPress = new Date();
+            nPress = dPress.getTime();
+        //    console.log("nPress = " + nPress + ", exact = " + noteArray[0].exact + ". offset = " + (nPress - noteArray[0].exact));
+            /*if (noteArray[0]) {
+                pressValue = duration - noteArray[0].exact;
+            }*/
+            //console.log((noteArray[0].timeCreated - nPress) + timeLeftValue);
+            if (e.keyCode == 68) { // D keydown
+                judgeNote("blue");
             } else if (e.keyCode == 70) { // F keydown
-                judgeNote("5");
-            } else if (e.keyCode == 86) { // V keydown
-                judgeNote("6");
+                judgeNote("red");
+            } else if (e.keyCode == 74) { // J keydown
+                judgeNote("red");
+            } else if (e.keyCode == 75) { // K keydown
+                judgeNote("blue");
             }
-            
-            //judgeNote("1");
         }
         
-        function judgeNote(col) {
-            if (noteArray[col].length > 0) {
-                hitMs = (noteArray[col][0].timeCreated - timePressed) + timeLeftValue;
+        function judgeNote(color) {
+            if (noteArray.length > 0) {
+                hitMs = (noteArray[0].timeCreated - nPress) + timeLeftValue;
             
-                if (hitMs > 136) {
-                    test.innerHTML = "POOR<br>"
-                    test.style.color = "red";
-                    removeNote(col);
-                } else if (hitMs <= 136 && hitMs > 51) {
-                    test.innerHTML = "GOOD<br>"
-                    test.style.color = "orange";
-                    removeNote(col);
-                } else if (hitMs <= 51 && hitMs > 17) {
-                    test.innerHTML = "GREAT<br>"
-                    test.style.color = "blue";
-                    removeNote(col);
-                } else if (hitMs <= 17 && hitMs >= -17) {
-                    test.innerHTML = "PGREAT<br>"
-                    test.style.color = "purple";
-                    removeNote(col);
-                } else if (hitMs < -17 && hitMs >= -51) {
-                    test.innerHTML = "GREAT<br>"
-                    test.style.color = "blue";
-                    removeNote(col);
-                } else if (hitMs < 51 && hitMs >= -136) {
-                    test.innerHTML = "GOOD<br>"
-                    test.style.color = "orange";
-                    removeNote(col);
-                } else if (hitMs < -136) {
-                    test.innerHTML = "POOR<br>";
-                    test.style.color = "red";
-                    removeNote(col);
-                }
-                if (hitMs > 0) {
-                    test.innerHTML += hitMs + "ms Early";
-                } else if (hitMs < 0) {
-                    test.innerHTML += -hitMs + "ms Late";
+                if ((hitMs > 100 || hitMs < -100) || color != noteArray[0].color) {
+                    test.innerHTML = "Bad " + hitMs + "ms";
+                    removeNote();
                 } else {
-                    test.innerHTML += hitMs + "ms Exact!";
+                    test.innerHTML = "Good " + hitMs + "ms";
+                    removeNote();
                 }
             }
         }
